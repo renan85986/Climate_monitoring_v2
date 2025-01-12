@@ -7,13 +7,24 @@ class mqtt_client: #classe de conexão
         self.__port = port
         self.__client_name = "renanzao"
         self.__keepalive = keepalive # envia pings para o broker para sinalizar que está ativo
+        self.__mqtt_client = None
    
     def start_connection(self):
-        mqtt_cliente = mqtt.Client(client_id=self.__client_name) #identifico a variavel mqtt_client como um cliente mqtt com o nome
+        mqtt_client = mqtt.Client(client_id=self.__client_name) #identifico a variavel mqtt_client como um cliente mqtt com o nome
        #callbacks
-        mqtt_cliente.on_connect = on_connect 
-        mqtt_cliente.on_subscribe = on_subscribe
-        mqtt_cliente.on_message = on_message 
+        mqtt_client.on_connect = on_connect 
+        mqtt_client.on_subscribe = on_subscribe
+        mqtt_client.on_message = on_message  
 
-        mqtt_cliente.connect(host = self.__broker_ip, port = self.__port, keepalive = self.__keepalive)
-        mqtt_cliente.loop_start() #fica num loop esperando por informações do broker 
+        mqtt_client.connect(host = self.__broker_ip, port = self.__port, keepalive = self.__keepalive)
+        self.__mqtt_client = mqtt_client
+        self.__mqtt_client.loop_start() #fica num loop esperando por informações do broker 
+
+    def end_connection(self):
+        try: 
+            self.__mqtt_client.loop_stop()
+            self.__mqtt_client.disconnect()
+            return True  
+        except:
+
+            return False    
