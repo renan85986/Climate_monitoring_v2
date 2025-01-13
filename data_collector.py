@@ -5,6 +5,8 @@ import requests
 #configuração api open weather map
 api_key = "91a8c6f027231dcd0a2bbf297c28210c"
 url_base = "http://api.openweathermap.org/data/2.5/weather?"
+
+
 cidade = input("Qual cidade você quer saber o clima?")
 
 url_final = f"{url_base}appid={api_key}&q={cidade}"
@@ -30,11 +32,15 @@ else:
 
 
 #configuração publisher mqtt
-#mqtt_client = mqtt.Client(client_id ='data_collector')
-#mqtt_client.connect(host='localhost', port=1883)
-#mqtt_client.loop_start()
+mqtt_client = mqtt.Client(client_id ='data_collector')
+mqtt_client.connect(host='localhost', port=1883)
+mqtt_client.loop_start()
 
 
-#while True:
-#    mqtt_client.publish("/temperatura", "35.5")
-#    time.sleep(10)
+while True:
+    mqtt_client.publish("/temperatura", temperatura)
+    mqtt_client.publish("/pressao", pressao)
+    mqtt_client.publish("/umidade", umidade)
+    mqtt_client.publish("/clima", clima)
+    mqtt_client.publish("/vento", vento)
+    time.sleep(10)

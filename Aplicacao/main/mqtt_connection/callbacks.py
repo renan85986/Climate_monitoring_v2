@@ -5,6 +5,10 @@ def on_connect(client, userdata, flags, rc): #interrupção que ocorre quando co
         print('conectado!')
         client.subscribe("/temperatura")
         client.subscribe("/umidade")
+        client.subscribe("/pressao")
+        client.subscribe("/clima")
+        client.subscribe("/vento")
+
     else:
         print(f'nao conectei, erro = {rc}')
 
