@@ -3,6 +3,8 @@ import time
 import requests
 import keyboard
 import threading
+import json
+from datetime import datetime, timezone
 
 #variáveis globais
 parar = False
@@ -38,6 +40,11 @@ while True:
 
       print(requisicao.json())
       dados = requisicao.json()
+      
+      #captura o tempo da requisição e converte para o formato timestamp
+      timestamp = datetime.now(timezone.utc)
+      iso_timestamp = timestamp.isoformat(timespec='seconds').replace('+00:00','Z')
+      print(iso_timestamp)
 
       if dados['cod'] == 200:
         temperatura = dados['main']['temp']
@@ -54,11 +61,37 @@ while True:
       else:
         print("Alguma coisa deu errado, tente outra cidade!")
         break
-        
-      mqtt_client.publish("/temperatura", temperatura)
-      mqtt_client.publish("/pressao", pressao)
-      mqtt_client.publish("/umidade", umidade)
-      mqtt_client.publish("/clima", clima)
-      mqtt_client.publish("/vento", vento)
+      
+      temperatura = temperatura - 273.15
+      temperatura_json = {
+         "timestamp": iso_timestamp,
+         "value" : temperatura 
+      }
+
+      pressao_json = {
+         "timestamp": iso_timestamp,
+         "value": pressao 
+      }
+
+      umidade_json = {
+         "timestamp": iso_timestamp,
+         "value": umidade
+      } 
+
+      clima_json = {
+         "timestamp": iso_timestamp,
+         "value": clima
+      } 
+
+      vento_json = {
+         "timestamp": iso_timestamp,
+         "value": vento
+      } 
+
+      mqtt_client.publish("/temperatura", payload=json.dumps(temperatura_json))
+      mqtt_client.publish("/pressao", payload=json.dumps(pressao_json))
+      mqtt_client.publish("/umidade", payload=json.dumps(umidade_json))
+      mqtt_client.publish("/clima", payload=json.dumps(clima_json))
+      mqtt_client.publish("/vento", payload=json.dumps(vento_json))
       time.sleep(10)
 
