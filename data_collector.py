@@ -7,7 +7,38 @@ import json
 from datetime import datetime, timezone
 
 #variáveis globais
+periodicidade = 10
 parar = False
+msg_inicial={
+        "machine_id": "REN1",
+        "sensors":[
+            {
+                "sensor_id": "1",
+                "data_type": "float",
+                "data_interval": periodicidade
+            },
+            {
+                "sensor_id": "2",
+                "data_type": "float",
+                "data_interval": periodicidade
+            },
+            {
+                "sensor_id": "3",
+                "data_type": "float",
+                "data_interval": periodicidade
+            },
+            {
+                "sensor_id": "4",
+                "data_type": "string",
+                "data_interval": periodicidade
+            },
+            {
+                "sensor_id": "5",
+                "data_type": "float",
+                "data_interval": periodicidade
+            }
+            ]
+ }
 #configuração api open weather map
 api_key = "91a8c6f027231dcd0a2bbf297c28210c"
 url_base = "http://api.openweathermap.org/data/2.5/weather?"
@@ -28,7 +59,9 @@ def monitorar_tecla(): #função que executa em uma thread externa para monitora
 while True:
  cidade = input("Qual cidade você quer saber o clima?")
  thread = threading.Thread(target=monitorar_tecla, daemon=True)
- thread.start()  
+ thread.start()
+ mqtt_client.publish("/sensor_monitors", payload=json.dumps(msg_inicial))
+ 
 
  while True: #loop interno, faz requisições a cada tempo determinado no time.sleep e publica no broker
       if parar:
@@ -38,13 +71,13 @@ while True:
       url_final = f"{url_base}appid={api_key}&q={cidade}"
       requisicao = requests.get(url_final)
 
-      print(requisicao.json())
+      #print(requisicao.json())
       dados = requisicao.json()
       
       #captura o tempo da requisição e converte para o formato timestamp
       timestamp = datetime.now(timezone.utc)
       iso_timestamp = timestamp.isoformat(timespec='seconds').replace('+00:00','Z')
-      print(iso_timestamp)
+      #print(iso_timestamp)
 
       if dados['cod'] == 200:
         temperatura = dados['main']['temp']
@@ -86,12 +119,15 @@ while True:
       vento_json = {
          "timestamp": iso_timestamp,
          "value": vento
-      } 
+      }  
+      
+      mqtt_client.publish("/sensor_monitors/REN1/temperatura", payload=json.dumps(temperatura_json))
+      mqtt_client.publish("/sensor_monitors/REN1/pressao", payload=json.dumps(pressao_json))
+      mqtt_client.publish("/sensor_monitors/REN1/umidade", payload=json.dumps(umidade_json))
+      mqtt_client.publish("/sensor_monitors/REN1/clima", payload=json.dumps(clima_json))
+      mqtt_client.publish("/sensor_monitors/REN1/vento", payload=json.dumps(vento_json))
 
-      mqtt_client.publish("/temperatura", payload=json.dumps(temperatura_json))
-      mqtt_client.publish("/pressao", payload=json.dumps(pressao_json))
-      mqtt_client.publish("/umidade", payload=json.dumps(umidade_json))
-      mqtt_client.publish("/clima", payload=json.dumps(clima_json))
-      mqtt_client.publish("/vento", payload=json.dumps(vento_json))
-      time.sleep(10)
+      time.sleep(periodicidade)
+      
+      mqtt_client.publish("/sensor_monitors", payload=json.dumps(msg_inicial))
 

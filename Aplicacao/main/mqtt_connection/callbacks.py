@@ -3,12 +3,12 @@ from Aplicacao.configs.broker_conf import mqtt_broker_configs
 def on_connect(client, userdata, flags, rc): #interrupção que ocorre quando conecta ao broker
     if rc == 0:
         print('conectado!')
-        client.subscribe("/temperatura")
-        client.subscribe("/umidade")
-        client.subscribe("/pressao")
-        client.subscribe("/clima")
-        client.subscribe("/vento")
-
+        client.subscribe("/sensor_monitors/REN1/temperatura")
+        client.subscribe("/sensor_monitors/REN1/umidade")
+        client.subscribe("/sensor_monitors/REN1/pressao")
+        client.subscribe("/sensor_monitors/REN1/clima")
+        client.subscribe("/sensor_monitors/REN1/vento")
+        #client.subscribe("/sensor_monitors")   
     else:
         print(f'nao conectei, erro = {rc}')
 
