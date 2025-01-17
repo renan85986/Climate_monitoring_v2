@@ -90,6 +90,7 @@ while True:
         umidade_atual = dados['current']['humidity']
         clima_atual = dados['current']['condition']['text']
         vento_atual = dados['current']['wind_kph']
+        sensacao_termica_atual = dados['current']['feelslike_c']
         #dados dia atual
         temperatura_max = dados['forecast']['forecastday'][0]['day']['maxtemp_c']
         temperatura_min = dados['forecast']['forecastday'][0]['day']['mintemp_c']
@@ -251,7 +252,7 @@ while True:
           },
           "temperatura_dia_atual_todo":{ 
             "temp_max" : temperatura_max,
-            "temp_max" : temperatura_min,
+            "temp_min" : temperatura_min,
             "temp_media" : temperatura_media
           },
           "temperatura_dia_atual_6h":{ 
@@ -269,42 +270,158 @@ while True:
           "temperatura_dia_seguinte_6h":{ 
             "temp_6h" : temperatura_seguinte_6h
           },
-          "temperatura_dia_atual_12h":{ 
+          "temperatura_dia_seguinte_12h":{ 
             "temp_12h" : temperatura_seguinte_12h
           }, 
-          "temperatura_dia_atual_18h":{ 
+          "temperatura_dia_seguinte_18h":{ 
             "temp_18h" : temperatura_seguinte_18h
           },
-          "temperatura_dia_atual_24h":{ 
+          "temperatura_dia_seguinte_24h":{ 
             "temp_24h" : temperatura_seguinte_24h
-          },                 
+          }                 
       }
 
-      pressao_atual_json = {
+      pressao_json = {
          "timestamp": iso_timestamp,
-         "value": pressao_atual  
+          "pressao_atual":{ 
+            "pressao_atual" : pressao_atual
+          },
+          "pressao_dia_atual_6h":{ 
+            "pressao_6h" : pressao_atual_6h
+          },
+          "pressao_dia_atual_12h":{ 
+            "pressao_12h" : pressao_atual_12h
+          }, 
+          "pressao_dia_atual_18h":{ 
+            "pressao_18h" : pressao_atual_18h
+          },
+          "pressao_dia_atual_24h":{ 
+            "pressao_24h" : pressao_atual_24h
+          },
+          "pressao_dia_seguinte_6h":{ 
+            "pressao_6h" : pressao_seguinte_6h
+          },
+          "pressao_dia_seguinte_12h":{ 
+            "pressao_12h" : pressao_seguinte_12h
+          }, 
+          "pressao_dia_seguinte_18h":{ 
+            "pressao_18h" : pressao_seguinte_18h
+          },
+          "pressao_dia_seguinte_24h":{ 
+            "pressao_24h" : pressao_seguinte_24h
+          }                 
       }
 
-      umidade_atual_json = {
+      umidade_json = {
          "timestamp": iso_timestamp,
-         "value": umidade_atual 
-      } 
+          "umidade_atual":{ 
+            "umidade_atual" : umidade_atual
+          },
+          "umidade_dia_atual_todo":{ 
+            "umidade_media" : umidade_media
+          },
+          "umidade_dia_atual_6h":{ 
+            "umidade_6h" : umidade_atual_6h
+          },
+          "umidade_dia_atual_12h":{ 
+            "umidade_12h" : umidade_atual_12h
+          }, 
+          "umidade_dia_atual_18h":{ 
+            "umidade_18h" : umidade_atual_18h
+          },
+          "umidade_dia_atual_24h":{ 
+            "umidade_24h" : umidade_atual_24h
+          },
+          "umidade_dia_seguinte_6h":{ 
+            "umidade_6h" : umidade_seguinte_6h
+          },
+          "umidade_dia_seguinte_12h":{ 
+            "umidade_12h" : umidade_seguinte_12h
+          }, 
+          "umidade_dia_seguinte_18h":{ 
+            "umidade_18h" : umidade_seguinte_18h
+          },
+          "umidade_dia_seguinte_24h":{ 
+            "umidade_24h" : umidade_seguinte_24h
+          }                 
+      }
 
-      clima_atual_json = {
+      clima_json = {
          "timestamp": iso_timestamp,
-         "value": clima_atual 
-      } 
+          "clima_atual":{ 
+            "clima_atual" : clima_atual
+          },
+          "clima_dia_atual_todo":{ 
+            "clima_dia" : clima
+          },
+          "clima_dia_atual_6h":{ 
+            "clima_6h" : clima_atual_6h
+          },
+          "clima_dia_atual_12h":{ 
+            "clima_12h" : clima_atual_12h
+          }, 
+          "clima_dia_atual_18h":{ 
+            "clima_18h" : clima_atual_18h
+          },
+          "clima_dia_atual_24h":{ 
+            "clima_24h" : clima_atual_24h
+          },
+          "clima_dia_seguinte_6h":{ 
+            "clima_6h" : clima_seguinte_6h
+          },
+          "clima_dia_seguinte_12h":{ 
+            "clima_12h" : clima_seguinte_12h
+          }, 
+          "clima_dia_seguinte_18h":{ 
+            "clima_18h" : clima_seguinte_18h
+          },
+          "clima_dia_seguinte_24h":{ 
+            "clima_24h" : clima_seguinte_24h
+          }                
+      }
 
-      vento_atual_json = {
+      vento_json = {
          "timestamp": iso_timestamp,
-         "value": vento_atual 
+          "vento_atual":{ 
+            "vento_atual" : vento_atual
+          },
+          "vento_dia_atual_6h":{ 
+            "vento_6h" : vento_atual_6h
+          },
+          "vento_dia_atual_12h":{ 
+            "vento_12h" : vento_atual_12h
+          }, 
+          "vento_dia_atual_18h":{ 
+            "vento_18h" : vento_atual_18h
+          },
+          "vento_dia_atual_24h":{ 
+            "vento_24h" : vento_atual_24h
+          },
+          "vento_dia_seguinte_6h":{ 
+            "vento_6h" : vento_seguinte_6h
+          },
+          "vento_dia_seguinte_12h":{ 
+            "vento_12h" : vento_seguinte_12h
+          }, 
+          "vento_dia_seguinte_18h":{ 
+            "vento_18h" : vento_seguinte_18h
+          },
+          "vento_dia_seguinte_24h":{ 
+            "vento_24h" : vento_seguinte_24h
+          }                 
       }  
       
+      sensacao_termica_json = {
+         "timestamp" : iso_timestamp,
+         "sensacao_termica_atual" : sensacao_termica_atual
+      }
+
       mqtt_client.publish("/sensor_monitors/REN1/temperatura", payload=json.dumps(temperatura_json))
-      mqtt_client.publish("/sensor_monitors/REN1/pressao", payload=json.dumps(pressao_atual_json))
-      mqtt_client.publish("/sensor_monitors/REN1/umidade", payload=json.dumps(umidade_atual_json))
-      mqtt_client.publish("/sensor_monitors/REN1/clima", payload=json.dumps(clima_atual_json))
-      mqtt_client.publish("/sensor_monitors/REN1/vento", payload=json.dumps(vento_atual_json))
+      mqtt_client.publish("/sensor_monitors/REN1/pressao", payload=json.dumps(pressao_json))
+      mqtt_client.publish("/sensor_monitors/REN1/umidade", payload=json.dumps(umidade_json))
+      mqtt_client.publish("/sensor_monitors/REN1/clima", payload=json.dumps(clima_json))
+      mqtt_client.publish("/sensor_monitors/REN1/vento", payload=json.dumps(vento_json))
+      mqtt_client.publish("/sensor_monitors/REN1/sensacao_termica", payload=json.dumps(sensacao_termica_json))
 
       time.sleep(periodicidade)
       
