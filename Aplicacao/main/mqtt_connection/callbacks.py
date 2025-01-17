@@ -18,4 +18,5 @@ def on_subscribe(client, userdata, mid, granted_qos):
 def on_message(client, userdata, message):
     print('Mensagem Recebida!')
     print(client)
-    print(message.payload)  
+    print(message.payload)
+    
