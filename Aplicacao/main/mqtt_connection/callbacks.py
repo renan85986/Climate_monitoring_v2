@@ -9,6 +9,7 @@ def on_connect(client, userdata, flags, rc): #interrupção que ocorre quando co
         client.subscribe("/sensor_monitors/REN1/pressao")
         client.subscribe("/sensor_monitors/REN1/clima")
         client.subscribe("/sensor_monitors/REN1/vento")
+        client.subscribe("/sensor_monitors/REN1/sensacao_termica")
         client.subscribe("/sensor_monitors")   
     else:
         print(f'nao conectei, erro = {rc}')
