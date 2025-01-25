@@ -12,6 +12,9 @@ INFLUX_BUCKET = "Sensores"
 
 influx_connection = InfluxDBClient(url = INFLUX_URL, token = INFLUX_TOKEN, org = INFLUX_ORG) #cria conexão com o influxdb
 escrita_influx = influx_connection.write_api(write_options=SYNCHRONOUS) #define objeto para escrita, synchronous diz que o codigo espera a resposta antes de continuar, bloqueando o resto do codigo
+def check_string(value):
+        
+        return f'"{value}"' if isinstance(value, str) else str(value) #"""Se for uma string, coloca entre aspas duplas, senão retorna a string do valor"""
 
 #variaveis globais
 tmp, umi, prs, vnt, snc, cli = None, None, None, None, None, None
@@ -74,7 +77,7 @@ class temperatura:
         temp_12h_seguinte = payload_temp['temperatura_dia_seguinte_12h']['temp_12h']
         temp_18h_seguinte = payload_temp['temperatura_dia_seguinte_18h']['temp_18h']
         temp_24h_seguinte = payload_temp['temperatura_dia_seguinte_24h']['temp_24h']
-        data_point = f"temperatura,sensor=temperatura,local={cidade} temp_atual={temp_atual} {timestamp}\n"\
+        data_point_temperatura = f"temperatura,sensor=temperatura,local={cidade} temp_atual={temp_atual} {timestamp}\n"\
                     f"temperatura,sensor=temperatura,local={cidade} temp_max={temp_max} {timestamp}\n"\
                     f"temperatura,sensor=temperatura,local={cidade} temp_min={temp_min} {timestamp}\n"\
                     f"temperatura,sensor=temperatura,local={cidade} temp_media={temp_media} {timestamp}\n"\
@@ -87,7 +90,7 @@ class temperatura:
                     f"temperatura,sensor=temperatura,local={cidade} temp_18h_seguinte={temp_18h_seguinte} {timestamp}\n"\
                     f"temperatura,sensor=temperatura,local={cidade} temp_24h_seguinte={temp_24h_seguinte} {timestamp}"
         
-        escrita_influx.write(bucket=INFLUX_BUCKET, org=INFLUX_ORG, record=data_point)
+        escrita_influx.write(bucket=INFLUX_BUCKET, org=INFLUX_ORG, record=data_point_temperatura)
         return temperatura(temp_atual, temp_max, temp_min, temp_media, temp_6h_atual, temp_12h_atual, temp_18h_atual, temp_24h_atual, temp_6h_seguinte, temp_12h_seguinte, temp_18h_seguinte, temp_24h_seguinte, timestamp, cidade)
 
 
@@ -107,6 +110,8 @@ class pressao:
 
     def processa_pressao(payload_pressao):
         timestamp = payload_pressao['timestamp']
+        timestamp = datetime.strptime(timestamp, "%Y-%m-%dT%H:%M:%SZ")
+        timestamp = int(timestamp.timestamp() * 1e9)
         cidade = payload_pressao['cidade']
         pressao_atual = payload_pressao['pressao_atual']['pressao_atual']
         pressao_6h_atual = payload_pressao['pressao_dia_atual_6h']['pressao_6h']
@@ -117,6 +122,17 @@ class pressao:
         pressao_12h_seguinte = payload_pressao['pressao_dia_seguinte_12h']['pressao_12h']
         pressao_18h_seguinte = payload_pressao['pressao_dia_seguinte_18h']['pressao_18h']
         pressao_24h_seguinte = payload_pressao['pressao_dia_seguinte_24h']['pressao_24h']
+        data_point_pressao = f"pressao,sensor=pressao,local={cidade} pressao_atual={pressao_atual} {timestamp}\n"\
+                    f"pressao,sensor=pressao,local={cidade} pressao_6h_atual={pressao_6h_atual} {timestamp}\n"\
+                    f"pressao,sensor=pressao,local={cidade} pressao_12h_atual={pressao_12h_atual} {timestamp}\n"\
+                    f"pressao,sensor=pressao,local={cidade} pressao_18h_atual={pressao_18h_atual} {timestamp}\n"\
+                    f"pressao,sensor=pressao,local={cidade} pressao_24h_atual={pressao_24h_atual} {timestamp}\n"\
+                    f"pressao,sensor=pressao,local={cidade} pressao_6h_seguinte={pressao_6h_seguinte} {timestamp}\n"\
+                    f"pressao,sensor=pressao,local={cidade} pressao_12h_seguinte={pressao_12h_seguinte} {timestamp}\n"\
+                    f"pressao,sensor=pressao,local={cidade} pressao_18h_seguinte={pressao_18h_seguinte} {timestamp}\n"\
+                    f"pressao,sensor=pressao,local={cidade} pressao_24h_seguinte={pressao_24h_seguinte} {timestamp}"
+        
+        escrita_influx.write(bucket=INFLUX_BUCKET, org=INFLUX_ORG, record=data_point_pressao)
         return pressao(pressao_atual, pressao_6h_atual, pressao_12h_atual, pressao_18h_atual, pressao_24h_atual, pressao_6h_seguinte, pressao_12h_seguinte, pressao_18h_seguinte, pressao_24h_seguinte, timestamp, cidade)
 
 class umidade:
@@ -136,6 +152,8 @@ class umidade:
 
     def processa_umidade(payload_umidade):
         timestamp = payload_umidade['timestamp']
+        timestamp = datetime.strptime(timestamp, "%Y-%m-%dT%H:%M:%SZ")
+        timestamp = int(timestamp.timestamp() * 1e9)
         cidade = payload_umidade['cidade']
         umidade_atual = payload_umidade['umidade_atual']['umidade_atual']
         umidade_media = payload_umidade['umidade_dia_atual_todo']['umidade_media']
@@ -147,6 +165,17 @@ class umidade:
         umidade_12h_seguinte = payload_umidade['umidade_dia_seguinte_12h']['umidade_12h']
         umidade_18h_seguinte = payload_umidade['umidade_dia_seguinte_18h']['umidade_18h']
         umidade_24h_seguinte = payload_umidade['umidade_dia_seguinte_24h']['umidade_24h']
+        data_point_umidade = f"umidade,sensor=umidade,local={cidade} umidade_atual={umidade_atual} {timestamp}\n"\
+                    f"umidade,sensor=umidade,local={cidade} umidade_media={umidade_media} {timestamp}\n"\
+                    f"umidade,sensor=umidade,local={cidade} umidade_6h_atual={umidade_6h_atual} {timestamp}\n"\
+                    f"umidade,sensor=umidade,local={cidade} umidade_12h_atual={umidade_12h_atual} {timestamp}\n"\
+                    f"umidade,sensor=umidade,local={cidade} umidade_18h_atual={umidade_18h_atual} {timestamp}\n"\
+                    f"umidade,sensor=umidade,local={cidade} umidade_24h_atual={umidade_24h_atual} {timestamp}\n"\
+                    f"umidade,sensor=umidade,local={cidade} umidade_6h_seguinte={umidade_6h_seguinte} {timestamp}\n"\
+                    f"umidade,sensor=umidade,local={cidade} umidade_12h_seguinte={umidade_12h_seguinte} {timestamp}\n"\
+                    f"umidade,sensor=umidade,local={cidade} umidade_18h_seguinte={umidade_18h_seguinte} {timestamp}\n"\
+                    f"umidade,sensor=umidade,local={cidade} umidade_24h_seguinte={umidade_24h_seguinte} {timestamp}"
+        escrita_influx.write(bucket=INFLUX_BUCKET, org=INFLUX_ORG, record=data_point_umidade)
         return umidade(umidade_atual, umidade_media, umidade_6h_atual, umidade_12h_atual, umidade_18h_atual, umidade_24h_atual, umidade_6h_seguinte, umidade_12h_seguinte, umidade_18h_seguinte, umidade_24h_seguinte, timestamp, cidade)
 
 
@@ -166,6 +195,8 @@ class vento:
 
     def processa_vento(payload_vento):
         timestamp = payload_vento['timestamp']
+        timestamp = datetime.strptime(timestamp, "%Y-%m-%dT%H:%M:%SZ")
+        timestamp = int(timestamp.timestamp() * 1e9)
         cidade = payload_vento['cidade']
         vento_atual = payload_vento['vento_atual']['vento_atual']
         vento_6h_atual = payload_vento['vento_dia_atual_6h']['vento_6h']
@@ -176,6 +207,16 @@ class vento:
         vento_12h_seguinte = payload_vento['vento_dia_seguinte_12h']['vento_12h']
         vento_18h_seguinte = payload_vento['vento_dia_seguinte_18h']['vento_18h']
         vento_24h_seguinte = payload_vento['vento_dia_seguinte_24h']['vento_24h']
+        data_point_vento = f"vento,sensor=vento,local={cidade} vento_atual={vento_atual} {timestamp}\n"\
+                   f"vento,sensor=vento,local={cidade} vento_6h_atual={vento_6h_atual} {timestamp}\n"\
+                   f"vento,sensor=vento,local={cidade} vento_12h_atual={vento_12h_atual} {timestamp}\n"\
+                   f"vento,sensor=vento,local={cidade} vento_18h_atual={vento_18h_atual} {timestamp}\n"\
+                   f"vento,sensor=vento,local={cidade} vento_24h_atual={vento_24h_atual} {timestamp}\n"\
+                   f"vento,sensor=vento,local={cidade} vento_6h_seguinte={vento_6h_seguinte} {timestamp}\n"\
+                   f"vento,sensor=vento,local={cidade} vento_12h_seguinte={vento_12h_seguinte} {timestamp}\n"\
+                   f"vento,sensor=vento,local={cidade} vento_18h_seguinte={vento_18h_seguinte} {timestamp}\n"\
+                   f"vento,sensor=vento,local={cidade} vento_24h_seguinte={vento_24h_seguinte} {timestamp}"
+        escrita_influx.write(bucket=INFLUX_BUCKET, org=INFLUX_ORG, record=data_point_vento)
         return vento(vento_atual, vento_6h_atual, vento_12h_atual, vento_18h_atual, vento_24h_atual, vento_6h_seguinte, vento_12h_seguinte, vento_18h_seguinte, vento_24h_seguinte, timestamp, cidade)
 
 class clima:
@@ -193,10 +234,14 @@ class clima:
         self.timestamp = timestamp
         self.cidade = cidade
 
+
     def processa_clima(payload_clima):
         timestamp = payload_clima['timestamp']
+        timestamp = datetime.strptime(timestamp, "%Y-%m-%dT%H:%M:%SZ")
+        timestamp = int(timestamp.timestamp() * 1e9)
         cidade = payload_clima['cidade']
         clima_atual = payload_clima['clima_atual']['clima_atual']
+        print(f"clima atual: {clima_atual}")
         clima_dia = payload_clima['clima_dia_atual_todo']['clima_dia']
         clima_6h_atual = payload_clima['clima_dia_atual_6h']['clima_6h']
         clima_12h_atual = payload_clima['clima_dia_atual_12h']['clima_12h']
@@ -206,6 +251,17 @@ class clima:
         clima_12h_seguinte = payload_clima['clima_dia_seguinte_12h']['clima_12h']
         clima_18h_seguinte = payload_clima['clima_dia_seguinte_18h']['clima_18h']
         clima_24h_seguinte = payload_clima['clima_dia_seguinte_24h']['clima_24h']
+        data_point_clima = f"clima,sensor=clima,local={cidade} clima_atual={check_string(clima_atual)} {timestamp}\n"\
+                   f"clima,sensor=clima,local={cidade} clima_6h_atual={check_string(clima_6h_atual)} {timestamp}\n"\
+                   f"clima,sensor=clima,local={cidade} clima_12h_atual={check_string(clima_12h_atual)} {timestamp}\n"\
+                   f"clima,sensor=clima,local={cidade} clima_18h_atual={check_string(clima_18h_atual)} {timestamp}\n"\
+                   f"clima,sensor=clima,local={cidade} clima_24h_atual={check_string(clima_24h_atual)} {timestamp}\n"\
+                   f"clima,sensor=clima,local={cidade} clima_6h_seguinte={check_string(clima_6h_seguinte)} {timestamp}\n"\
+                   f"clima,sensor=clima,local={cidade} clima_12h_seguinte={check_string(clima_12h_seguinte)} {timestamp}\n"\
+                   f"clima,sensor=clima,local={cidade} clima_18h_seguinte={check_string(clima_18h_seguinte)} {timestamp}\n"\
+                   f"clima,sensor=clima,local={cidade} clima_24h_seguinte={check_string(clima_24h_seguinte)} {timestamp}"
+
+        escrita_influx.write(bucket=INFLUX_BUCKET, org=INFLUX_ORG, record=data_point_clima)
         return clima(clima_atual, clima_dia, clima_6h_atual, clima_12h_atual, clima_18h_atual, clima_24h_atual, clima_6h_seguinte, clima_12h_seguinte, clima_18h_seguinte, clima_24h_seguinte, timestamp, cidade)
 
 class sensacao:
@@ -216,8 +272,12 @@ class sensacao:
 
     def processa_sensacao(payload_sensacao):
         timestamp = payload_sensacao['timestamp']
+        timestamp = datetime.strptime(timestamp, "%Y-%m-%dT%H:%M:%SZ")
+        timestamp = int(timestamp.timestamp() * 1e9)
         sensacao_termica_atual = payload_sensacao['sensacao_termica_atual']
         cidade = payload_sensacao['cidade']
+        data_point_sensacao = f"sensacao,sensor=sensacao,local={cidade} sensacao_termica={sensacao_termica_atual} {timestamp}"
+        escrita_influx.write(bucket=INFLUX_BUCKET, org=INFLUX_ORG, record=data_point_sensacao)
         #print(f"Sensacao atual: {sensacao_termica_atual}")
         return sensacao(sensacao_termica_atual, timestamp, cidade)
 
