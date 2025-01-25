@@ -1,5 +1,19 @@
 import json
+from influxdb_client import InfluxDBClient, BucketsApi
+from influxdb_client.client.write_api import SYNCHRONOUS
+from datetime import datetime, timezone
 
+
+#conf influxdb
+INFLUX_URL = "https://us-east-1-1.aws.cloud2.influxdata.com/"
+INFLUX_TOKEN = "yyq7CPXnftjn_IgmBKlol5pfocEITI8i4JxzeCpz7tljcJFl3NxYmQKxZeQMtY-o1LvcGeCRNOX7sCAMzYYsqA=="
+INFLUX_ORG = "UFMG"
+INFLUX_BUCKET = "Sensores"
+
+influx_connection = InfluxDBClient(url = INFLUX_URL, token = INFLUX_TOKEN, org = INFLUX_ORG) #cria conexão com o influxdb
+escrita_influx = influx_connection.write_api(write_options=SYNCHRONOUS) #define objeto para escrita, synchronous diz que o codigo espera a resposta antes de continuar, bloqueando o resto do codigo
+
+#variaveis globais
 tmp, umi, prs, vnt, snc, cli = None, None, None, None, None, None
 
 def leitura_mensagem(topico, payload):
@@ -26,7 +40,7 @@ def leitura_mensagem(topico, payload):
         checar_alarmes(tmp,prs,umi,vnt,snc,cli)             
 
 class temperatura:
-    def __init__(self, temp_atual, temp_max, temp_min, temp_media, temp_6h_atual, temp_12h_atual, temp_18h_atual, temp_24h_atual, temp_6h_seguinte, temp_12h_seguinte, temp_18h_seguinte, temp_24h_seguinte):
+    def __init__(self, temp_atual, temp_max, temp_min, temp_media, temp_6h_atual, temp_12h_atual, temp_18h_atual, temp_24h_atual, temp_6h_seguinte, temp_12h_seguinte, temp_18h_seguinte, temp_24h_seguinte, timestamp, cidade):
         self.temp_atual = temp_atual
         self.temp_max = temp_max
         self.temp_min = temp_min 
@@ -39,8 +53,14 @@ class temperatura:
         self.temp_12h_seguinte = temp_12h_seguinte
         self.temp_18h_seguinte = temp_18h_seguinte 
         self.temp_24h_seguinte = temp_24h_seguinte
+        self.timestamp = timestamp
+        self.cidade = cidade
 
     def processa_temperatura(payload_temp):
+        cidade = payload_temp['cidade']
+        timestamp = payload_temp['timestamp']
+        timestamp = datetime.strptime(timestamp, "%Y-%m-%dT%H:%M:%SZ")
+        timestamp = int(timestamp.timestamp() * 1e9)
         temp_atual = payload_temp['temperatura_atual']['temp_atual']
         #print(f"Temperatura atual: {temp_atual}")
         temp_max = payload_temp['temperatura_dia_atual_todo']['temp_max']
@@ -54,11 +74,14 @@ class temperatura:
         temp_12h_seguinte = payload_temp['temperatura_dia_seguinte_12h']['temp_12h']
         temp_18h_seguinte = payload_temp['temperatura_dia_seguinte_18h']['temp_18h']
         temp_24h_seguinte = payload_temp['temperatura_dia_seguinte_24h']['temp_24h']
-        return temperatura(temp_atual, temp_max, temp_min, temp_media, temp_6h_atual, temp_12h_atual, temp_18h_atual, temp_24h_atual, temp_6h_seguinte, temp_12h_seguinte, temp_18h_seguinte, temp_24h_seguinte)
+        data_point = f"temp_atual,sensor=temperatura,local={cidade} valor={temp_atual} {timestamp}\n"\
+                     f"temp_max,sensor=temperatura,local={cidade} valor={temp_max} {timestamp}"
+        escrita_influx.write(bucket=INFLUX_BUCKET, org=INFLUX_ORG, record=data_point)
+        return temperatura(temp_atual, temp_max, temp_min, temp_media, temp_6h_atual, temp_12h_atual, temp_18h_atual, temp_24h_atual, temp_6h_seguinte, temp_12h_seguinte, temp_18h_seguinte, temp_24h_seguinte, timestamp, cidade)
 
 
 class pressao:
-    def __init__(self, pressao_atual, pressao_6h_atual, pressao_12h_atual, pressao_18h_atual, pressao_24h_atual, pressao_6h_seguinte, pressao_12h_seguinte, pressao_18h_seguinte, pressao_24h_seguinte):
+    def __init__(self, pressao_atual, pressao_6h_atual, pressao_12h_atual, pressao_18h_atual, pressao_24h_atual, pressao_6h_seguinte, pressao_12h_seguinte, pressao_18h_seguinte, pressao_24h_seguinte, timestamp, cidade):
         self.pressao_atual = pressao_atual
         self.pressao_6h_atual = pressao_6h_atual
         self.pressao_12h_atual = pressao_12h_atual
@@ -68,8 +91,12 @@ class pressao:
         self.pressao_12h_seguinte = pressao_12h_seguinte
         self.pressao_18h_seguinte = pressao_18h_seguinte 
         self.pressao_24h_seguinte = pressao_24h_seguinte
+        self.timestamp = timestamp
+        self.cidade = cidade
 
     def processa_pressao(payload_pressao):
+        timestamp = payload_pressao['timestamp']
+        cidade = payload_pressao['cidade']
         pressao_atual = payload_pressao['pressao_atual']['pressao_atual']
         pressao_6h_atual = payload_pressao['pressao_dia_atual_6h']['pressao_6h']
         pressao_12h_atual = payload_pressao['pressao_dia_atual_12h']['pressao_12h']
@@ -79,10 +106,10 @@ class pressao:
         pressao_12h_seguinte = payload_pressao['pressao_dia_seguinte_12h']['pressao_12h']
         pressao_18h_seguinte = payload_pressao['pressao_dia_seguinte_18h']['pressao_18h']
         pressao_24h_seguinte = payload_pressao['pressao_dia_seguinte_24h']['pressao_24h']
-        return pressao(pressao_atual, pressao_6h_atual, pressao_12h_atual, pressao_18h_atual, pressao_24h_atual, pressao_6h_seguinte, pressao_12h_seguinte, pressao_18h_seguinte, pressao_24h_seguinte)
+        return pressao(pressao_atual, pressao_6h_atual, pressao_12h_atual, pressao_18h_atual, pressao_24h_atual, pressao_6h_seguinte, pressao_12h_seguinte, pressao_18h_seguinte, pressao_24h_seguinte, timestamp, cidade)
 
 class umidade:
-    def __init__(self, umidade_atual, umidade_media, umidade_6h_atual, umidade_12h_atual, umidade_18h_atual, umidade_24h_atual, umidade_6h_seguinte, umidade_12h_seguinte, umidade_18h_seguinte, umidade_24h_seguinte):
+    def __init__(self, umidade_atual, umidade_media, umidade_6h_atual, umidade_12h_atual, umidade_18h_atual, umidade_24h_atual, umidade_6h_seguinte, umidade_12h_seguinte, umidade_18h_seguinte, umidade_24h_seguinte, timestamp, cidade):
         self.umidade_atual = umidade_atual
         self.umidade_dia_atual_todo = umidade_media       
         self.umidade_6h_atual = umidade_6h_atual
@@ -93,8 +120,12 @@ class umidade:
         self.umidade_12h_seguinte = umidade_12h_seguinte
         self.umidade_18h_seguinte = umidade_18h_seguinte 
         self.umidade_24h_seguinte = umidade_24h_seguinte
+        self.timestamp = timestamp
+        self.cidade = cidade
 
     def processa_umidade(payload_umidade):
+        timestamp = payload_umidade['timestamp']
+        cidade = payload_umidade['cidade']
         umidade_atual = payload_umidade['umidade_atual']['umidade_atual']
         umidade_media = payload_umidade['umidade_dia_atual_todo']['umidade_media']
         umidade_6h_atual = payload_umidade['umidade_dia_atual_6h']['umidade_6h']
@@ -105,11 +136,11 @@ class umidade:
         umidade_12h_seguinte = payload_umidade['umidade_dia_seguinte_12h']['umidade_12h']
         umidade_18h_seguinte = payload_umidade['umidade_dia_seguinte_18h']['umidade_18h']
         umidade_24h_seguinte = payload_umidade['umidade_dia_seguinte_24h']['umidade_24h']
-        return umidade(umidade_atual, umidade_media, umidade_6h_atual, umidade_12h_atual, umidade_18h_atual, umidade_24h_atual, umidade_6h_seguinte, umidade_12h_seguinte, umidade_18h_seguinte, umidade_24h_seguinte)
+        return umidade(umidade_atual, umidade_media, umidade_6h_atual, umidade_12h_atual, umidade_18h_atual, umidade_24h_atual, umidade_6h_seguinte, umidade_12h_seguinte, umidade_18h_seguinte, umidade_24h_seguinte, timestamp, cidade)
 
 
 class vento:
-    def __init__(self, vento_atual, vento_6h_atual, vento_12h_atual, vento_18h_atual, vento_24h_atual, vento_6h_seguinte, vento_12h_seguinte, vento_18h_seguinte, vento_24h_seguinte):
+    def __init__(self, vento_atual, vento_6h_atual, vento_12h_atual, vento_18h_atual, vento_24h_atual, vento_6h_seguinte, vento_12h_seguinte, vento_18h_seguinte, vento_24h_seguinte, timestamp, cidade):
         self.vento_atual = vento_atual     
         self.vento_6h_atual = vento_6h_atual
         self.vento_12h_atual = vento_12h_atual
@@ -119,8 +150,12 @@ class vento:
         self.vento_12h_seguinte = vento_12h_seguinte
         self.vento_18h_seguinte = vento_18h_seguinte 
         self.vento_24h_seguinte = vento_24h_seguinte
+        self.timestamp = timestamp
+        self.cidade = cidade
 
     def processa_vento(payload_vento):
+        timestamp = payload_vento['timestamp']
+        cidade = payload_vento['cidade']
         vento_atual = payload_vento['vento_atual']['vento_atual']
         vento_6h_atual = payload_vento['vento_dia_atual_6h']['vento_6h']
         vento_12h_atual = payload_vento['vento_dia_atual_12h']['vento_12h']
@@ -130,10 +165,10 @@ class vento:
         vento_12h_seguinte = payload_vento['vento_dia_seguinte_12h']['vento_12h']
         vento_18h_seguinte = payload_vento['vento_dia_seguinte_18h']['vento_18h']
         vento_24h_seguinte = payload_vento['vento_dia_seguinte_24h']['vento_24h']
-        return vento(vento_atual, vento_6h_atual, vento_12h_atual, vento_18h_atual, vento_24h_atual, vento_6h_seguinte, vento_12h_seguinte, vento_18h_seguinte, vento_24h_seguinte)
+        return vento(vento_atual, vento_6h_atual, vento_12h_atual, vento_18h_atual, vento_24h_atual, vento_6h_seguinte, vento_12h_seguinte, vento_18h_seguinte, vento_24h_seguinte, timestamp, cidade)
 
 class clima:
-    def __init__(self, clima_atual, clima_dia, clima_6h_atual, clima_12h_atual, clima_18h_atual, clima_24h_atual, clima_6h_seguinte, clima_12h_seguinte, clima_18h_seguinte, clima_24h_seguinte):
+    def __init__(self, clima_atual, clima_dia, clima_6h_atual, clima_12h_atual, clima_18h_atual, clima_24h_atual, clima_6h_seguinte, clima_12h_seguinte, clima_18h_seguinte, clima_24h_seguinte, timestamp, cidade):
         self.clima_atual = clima_atual
         self.clima_dia_atual_todo = clima_dia       
         self.clima_6h_atual = clima_6h_atual
@@ -144,8 +179,12 @@ class clima:
         self.clima_12h_seguinte = clima_12h_seguinte
         self.clima_18h_seguinte = clima_18h_seguinte 
         self.clima_24h_seguinte = clima_24h_seguinte
+        self.timestamp = timestamp
+        self.cidade = cidade
 
     def processa_clima(payload_clima):
+        timestamp = payload_clima['timestamp']
+        cidade = payload_clima['cidade']
         clima_atual = payload_clima['clima_atual']['clima_atual']
         clima_dia = payload_clima['clima_dia_atual_todo']['clima_dia']
         clima_6h_atual = payload_clima['clima_dia_atual_6h']['clima_6h']
@@ -156,16 +195,20 @@ class clima:
         clima_12h_seguinte = payload_clima['clima_dia_seguinte_12h']['clima_12h']
         clima_18h_seguinte = payload_clima['clima_dia_seguinte_18h']['clima_18h']
         clima_24h_seguinte = payload_clima['clima_dia_seguinte_24h']['clima_24h']
-        return clima(clima_atual, clima_dia, clima_6h_atual, clima_12h_atual, clima_18h_atual, clima_24h_atual, clima_6h_seguinte, clima_12h_seguinte, clima_18h_seguinte, clima_24h_seguinte)
+        return clima(clima_atual, clima_dia, clima_6h_atual, clima_12h_atual, clima_18h_atual, clima_24h_atual, clima_6h_seguinte, clima_12h_seguinte, clima_18h_seguinte, clima_24h_seguinte, timestamp, cidade)
 
 class sensacao:
-    def __init__(self, sensacao_termica_atual):
+    def __init__(self, sensacao_termica_atual, timestamp, cidade):
         self.sensacao_termica = sensacao_termica_atual
+        self.timestamp = timestamp
+        self.cidade = cidade
 
     def processa_sensacao(payload_sensacao):
+        timestamp = payload_sensacao['timestamp']
         sensacao_termica_atual = payload_sensacao['sensacao_termica_atual']
+        cidade = payload_sensacao['cidade']
         #print(f"Sensacao atual: {sensacao_termica_atual}")
-        return sensacao(sensacao_termica_atual)
+        return sensacao(sensacao_termica_atual, timestamp, cidade)
 
 def alarme_tempestade_severa(pressao_atual, vento_atual, umidade_atual):
     if pressao_atual < 980 and vento_atual > 50 and umidade_atual > 85:
@@ -204,6 +247,7 @@ def alarme_tendencia_aumento_temperatura(temp_atual, temp_6h_atual, temp_12h_atu
         return False
     
 
+
 def checar_alarmes(temperatura, pressao, umidade, vento, sensacao, clima):
     #print("checando alarmes")
     alarme_tempestade_severa(pressao.pressao_atual, vento.vento_atual, umidade.umidade_atual)
@@ -211,3 +255,4 @@ def checar_alarmes(temperatura, pressao, umidade, vento, sensacao, clima):
     alarme_onda_calor(sensacao.sensacao_termica, temperatura.temp_atual, umidade.umidade_atual)
     alarme_onda_frio(sensacao.sensacao_termica, temperatura.temp_atual, vento.vento_atual)
     alarme_tendencia_aumento_temperatura(temperatura.temp_atual, temperatura.temp_6h_atual, temperatura.temp_12h_atual, temperatura.temp_18h_atual, temperatura.temp_24h_atual)
+    

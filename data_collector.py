@@ -84,6 +84,7 @@ while True:
         break
       else:
         #dados agora
+        cidade = dados['location']['name']
         data_atualizado = dados['current']['last_updated']
         temperatura_atual = dados['current']['temp_c']
         pressao_atual = dados['current']['pressure_mb']
@@ -168,6 +169,7 @@ while True:
       #temperatura = temperatura - 273.15
       temperatura_json = {
          "timestamp": iso_timestamp,
+         "cidade": cidade,
           "temperatura_atual":{ 
             "temp_atual" : temperatura_atual
           },
@@ -204,6 +206,7 @@ while True:
 
       pressao_json = {
          "timestamp": iso_timestamp,
+         "cidade": cidade,
           "pressao_atual":{ 
             "pressao_atual" : pressao_atual
           },
@@ -235,6 +238,7 @@ while True:
 
       umidade_json = {
          "timestamp": iso_timestamp,
+         "cidade": cidade,
           "umidade_atual":{ 
             "umidade_atual" : umidade_atual
           },
@@ -269,6 +273,7 @@ while True:
 
       clima_json = {
          "timestamp": iso_timestamp,
+         "cidade": cidade,
           "clima_atual":{ 
             "clima_atual" : clima_atual
           },
@@ -303,6 +308,7 @@ while True:
 
       vento_json = {
          "timestamp": iso_timestamp,
+         "cidade": cidade,
           "vento_atual":{ 
             "vento_atual" : vento_atual
           },
@@ -334,6 +340,7 @@ while True:
       
       sensacao_termica_json = {
          "timestamp" : iso_timestamp,
+         "cidade": cidade,
          "sensacao_termica_atual" : sensacao_termica_atual
       }
 
