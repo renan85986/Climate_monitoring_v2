@@ -1,17 +1,17 @@
 import json
-from influxdb_client import InfluxDBClient, BucketsApi
+from influxdb_client import InfluxDBClient, BucketsApi, WriteOptions
 from influxdb_client.client.write_api import SYNCHRONOUS
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 
 
 #conf influxdb
 INFLUX_URL = "https://us-east-1-1.aws.cloud2.influxdata.com/"
 INFLUX_TOKEN = "yyq7CPXnftjn_IgmBKlol5pfocEITI8i4JxzeCpz7tljcJFl3NxYmQKxZeQMtY-o1LvcGeCRNOX7sCAMzYYsqA=="
 INFLUX_ORG = "UFMG"
-INFLUX_BUCKET = "Sensores"
+INFLUX_BUCKET = "Sensor"
 
 influx_connection = InfluxDBClient(url = INFLUX_URL, token = INFLUX_TOKEN, org = INFLUX_ORG) #cria conexão com o influxdb
-escrita_influx = influx_connection.write_api(write_options=SYNCHRONOUS) #define objeto para escrita, synchronous diz que o codigo espera a resposta antes de continuar, bloqueando o resto do codigo
+escrita_influx = influx_connection.write_api(write_options=WriteOptions(batch_size=1, flush_interval=0)) #define objeto para escrita, synchronous diz que o codigo espera a resposta antes de continuar, bloqueando o resto do codigo
 def check_string(value):
         
         return f'"{value}"' if isinstance(value, str) else str(value) #"""Se for uma string, coloca entre aspas duplas, senão retorna a string do valor"""
@@ -68,7 +68,13 @@ class temperatura:
         cidade = format_tag(cidade)
         timestamp = payload_temp['timestamp']
         timestamp = datetime.strptime(timestamp, "%Y-%m-%dT%H:%M:%SZ")
+        print(f"{timestamp}")
         timestamp = int(timestamp.timestamp() * 1e9)
+        tz_brasilia = timezone(timedelta(hours=-3))
+        timestamp2 = datetime.now(tz_brasilia)
+        timestamp2 = int(timestamp2.timestamp() * 1e9)
+        print(f"{timestamp}")
+        print(f"{timestamp2}")
         temp_atual = payload_temp['temperatura_atual']['temp_atual']
         #print(f"Temperatura atual: {temp_atual}")
         temp_max = payload_temp['temperatura_dia_atual_todo']['temp_max']

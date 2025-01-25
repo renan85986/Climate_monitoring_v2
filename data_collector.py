@@ -4,7 +4,7 @@ import requests
 import keyboard
 import threading
 import json
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 
 #variáveis globais
 periodicidade = 10
@@ -47,19 +47,19 @@ mqtt_client = mqtt.Client(client_id ='data_collector')
 mqtt_client.connect(host='localhost', port=1883)
 mqtt_client.loop_start()
 
-def monitorar_tecla(): #função que executa em uma thread externa para monitorar a tecla p
-  global parar
-  while True:
-        if keyboard.is_pressed("p"):
-          parar = True
-          print("tecla p pressionada")
-          break
+# def monitorar_tecla(): #função que executa em uma thread externa para monitorar a tecla p
+#   global parar
+#   while True:
+#         if keyboard.is_pressed("p"):
+#           parar = True
+#           print("tecla p pressionada")
+#           break
   
 #loop externo, quando volta nele seta a cidade a ser monitorada  
 while True:
  cidade = input("Qual cidade você quer saber o clima?")
- thread = threading.Thread(target=monitorar_tecla, daemon=True)
- thread.start()
+ #thread = threading.Thread(target=monitorar_tecla, daemon=True)
+ #thread.start()
  mqtt_client.publish("/sensor_monitors", payload=json.dumps(msg_inicial))
  
 
@@ -75,9 +75,10 @@ while True:
       dados = requisicao.json()
       
       #captura o tempo da requisição e converte para o formato timestamp
-      timestamp = datetime.now(timezone.utc)
-      iso_timestamp = timestamp.isoformat(timespec='seconds').replace('+00:00','Z')
-      #print(iso_timestamp)
+      timestamp_utc = datetime.now(timezone.utc)
+      timestamp_local = timestamp_utc - timedelta(hours=3)
+      iso_timestamp = timestamp_local.isoformat(timespec='seconds').replace('+00:00','Z')
+      print(iso_timestamp)
 
       if "error" in dados:
         print("Alguma coisa deu errado, tente outra cidade!")
