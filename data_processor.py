@@ -74,8 +74,19 @@ class temperatura:
         temp_12h_seguinte = payload_temp['temperatura_dia_seguinte_12h']['temp_12h']
         temp_18h_seguinte = payload_temp['temperatura_dia_seguinte_18h']['temp_18h']
         temp_24h_seguinte = payload_temp['temperatura_dia_seguinte_24h']['temp_24h']
-        data_point = f"temp_atual,sensor=temperatura,local={cidade} valor={temp_atual} {timestamp}\n"\
-                     f"temp_max,sensor=temperatura,local={cidade} valor={temp_max} {timestamp}"
+        data_point = f"temperatura,sensor=temperatura,local={cidade} temp_atual={temp_atual} {timestamp}\n"\
+                    f"temperatura,sensor=temperatura,local={cidade} temp_max={temp_max} {timestamp}\n"\
+                    f"temperatura,sensor=temperatura,local={cidade} temp_min={temp_min} {timestamp}\n"\
+                    f"temperatura,sensor=temperatura,local={cidade} temp_media={temp_media} {timestamp}\n"\
+                    f"temperatura,sensor=temperatura,local={cidade} temp_6h_atual={temp_6h_atual} {timestamp}\n"\
+                    f"temperatura,sensor=temperatura,local={cidade} temp_12h_atual={temp_12h_atual} {timestamp}\n"\
+                    f"temperatura,sensor=temperatura,local={cidade} temp_18h_atual={temp_18h_atual} {timestamp}\n"\
+                    f"temperatura,sensor=temperatura,local={cidade} temp_24h_atual={temp_24h_atual} {timestamp}\n"\
+                    f"temperatura,sensor=temperatura,local={cidade} temp_6h_seguinte={temp_6h_seguinte} {timestamp}\n"\
+                    f"temperatura,sensor=temperatura,local={cidade} temp_12h_seguinte={temp_12h_seguinte} {timestamp}\n"\
+                    f"temperatura,sensor=temperatura,local={cidade} temp_18h_seguinte={temp_18h_seguinte} {timestamp}\n"\
+                    f"temperatura,sensor=temperatura,local={cidade} temp_24h_seguinte={temp_24h_seguinte} {timestamp}"
+        
         escrita_influx.write(bucket=INFLUX_BUCKET, org=INFLUX_ORG, record=data_point)
         return temperatura(temp_atual, temp_max, temp_min, temp_media, temp_6h_atual, temp_12h_atual, temp_18h_atual, temp_24h_atual, temp_6h_seguinte, temp_12h_seguinte, temp_18h_seguinte, temp_24h_seguinte, timestamp, cidade)
 
