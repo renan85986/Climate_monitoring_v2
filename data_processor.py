@@ -16,6 +16,10 @@ def check_string(value):
         
         return f'"{value}"' if isinstance(value, str) else str(value) #"""Se for uma string, coloca entre aspas duplas, senão retorna a string do valor"""
 
+def format_tag(value):
+    #""" Substitui espaços por underscore (_) e remove vírgulas para tags do InfluxDB """
+    return value.replace(" ", "_").replace(",", "")
+
 #variaveis globais
 tmp, umi, prs, vnt, snc, cli = None, None, None, None, None, None
 
@@ -61,6 +65,7 @@ class temperatura:
 
     def processa_temperatura(payload_temp):
         cidade = payload_temp['cidade']
+        cidade = format_tag(cidade)
         timestamp = payload_temp['timestamp']
         timestamp = datetime.strptime(timestamp, "%Y-%m-%dT%H:%M:%SZ")
         timestamp = int(timestamp.timestamp() * 1e9)
@@ -113,6 +118,7 @@ class pressao:
         timestamp = datetime.strptime(timestamp, "%Y-%m-%dT%H:%M:%SZ")
         timestamp = int(timestamp.timestamp() * 1e9)
         cidade = payload_pressao['cidade']
+        cidade = format_tag(cidade)
         pressao_atual = payload_pressao['pressao_atual']['pressao_atual']
         pressao_6h_atual = payload_pressao['pressao_dia_atual_6h']['pressao_6h']
         pressao_12h_atual = payload_pressao['pressao_dia_atual_12h']['pressao_12h']
@@ -155,6 +161,7 @@ class umidade:
         timestamp = datetime.strptime(timestamp, "%Y-%m-%dT%H:%M:%SZ")
         timestamp = int(timestamp.timestamp() * 1e9)
         cidade = payload_umidade['cidade']
+        cidade = format_tag(cidade)
         umidade_atual = payload_umidade['umidade_atual']['umidade_atual']
         umidade_media = payload_umidade['umidade_dia_atual_todo']['umidade_media']
         umidade_6h_atual = payload_umidade['umidade_dia_atual_6h']['umidade_6h']
@@ -198,6 +205,7 @@ class vento:
         timestamp = datetime.strptime(timestamp, "%Y-%m-%dT%H:%M:%SZ")
         timestamp = int(timestamp.timestamp() * 1e9)
         cidade = payload_vento['cidade']
+        cidade = format_tag(cidade)
         vento_atual = payload_vento['vento_atual']['vento_atual']
         vento_6h_atual = payload_vento['vento_dia_atual_6h']['vento_6h']
         vento_12h_atual = payload_vento['vento_dia_atual_12h']['vento_12h']
@@ -240,6 +248,7 @@ class clima:
         timestamp = datetime.strptime(timestamp, "%Y-%m-%dT%H:%M:%SZ")
         timestamp = int(timestamp.timestamp() * 1e9)
         cidade = payload_clima['cidade']
+        cidade = format_tag(cidade)
         clima_atual = payload_clima['clima_atual']['clima_atual']
         print(f"clima atual: {clima_atual}")
         clima_dia = payload_clima['clima_dia_atual_todo']['clima_dia']
@@ -276,42 +285,59 @@ class sensacao:
         timestamp = int(timestamp.timestamp() * 1e9)
         sensacao_termica_atual = payload_sensacao['sensacao_termica_atual']
         cidade = payload_sensacao['cidade']
+        cidade = format_tag(cidade)
         data_point_sensacao = f"sensacao,sensor=sensacao,local={cidade} sensacao_termica={sensacao_termica_atual} {timestamp}"
         escrita_influx.write(bucket=INFLUX_BUCKET, org=INFLUX_ORG, record=data_point_sensacao)
         #print(f"Sensacao atual: {sensacao_termica_atual}")
         return sensacao(sensacao_termica_atual, timestamp, cidade)
 
-def alarme_tempestade_severa(pressao_atual, vento_atual, umidade_atual):
+def alarme_tempestade_severa(pressao_atual, vento_atual, umidade_atual, cidade, timestamp):
+    
     if pressao_atual < 980 and vento_atual > 50 and umidade_atual > 85:
+        data_point_alarme_ts = f"alarme,maquina=REN1,local={cidade} nome_alarme=\"tempestade_severa\" {timestamp}"
+        escrita_influx.write(bucket=INFLUX_BUCKET, org=INFLUX_ORG, record=data_point_alarme_ts)
+
         print(f"Tempestade severa detectada, pressao:{pressao_atual}, vento:{vento_atual}, umidade:{umidade_atual}")
         return True
     else:
         #print("tempestade severa nao detectada")
         return False
     
-def alarme_sensacao_termica_extrema(sensacao_termica, temp_atual, vento_atual, umidade_atual):
+def alarme_sensacao_termica_extrema(sensacao_termica, temp_atual, vento_atual, umidade_atual, cidade, timestamp):
+    
     if abs(sensacao_termica - temp_atual) > 5 and vento_atual > 20 and (umidade_atual < 30 or umidade_atual > 80) :
+        data_point_alarme_ste = f"alarme,maquina=REN1,local={cidade} nome_alarme=\"sensacao_termica_extrema\" {timestamp}"
+        escrita_influx.write(bucket=INFLUX_BUCKET, org=INFLUX_ORG, record=data_point_alarme_ste)       
         print(f"Sensação térmica extrema detectada, temperatura:{temp_atual}, sensacao:{sensacao_termica}, umidade:{umidade_atual}")
         return True
     else:
         return False
     
-def alarme_onda_calor(sensacao_termica, temp_atual, umidade_atual):
+def alarme_onda_calor(sensacao_termica, temp_atual, umidade_atual, cidade, timestamp):
+    
     if temp_atual > 20 and sensacao_termica > 20 and  umidade_atual > 0 :
+        data_point_alarme_oc = f"alarme,maquina=REN1,local={cidade} nome_alarme=\"onda_calor\" {timestamp}"
+        escrita_influx.write(bucket=INFLUX_BUCKET, org=INFLUX_ORG, record=data_point_alarme_oc)
         print(f"Onda de calor detectada, temperatura:{temp_atual}, umidade:{umidade_atual} alta pode aumentar a sensacao:{sensacao_termica},")
         return True
     else:
         return False
 
-def alarme_onda_frio(sensacao_termica, temp_atual, vento_atual):
+def alarme_onda_frio(sensacao_termica, temp_atual, vento_atual, cidade, timestamp):
+    
     if temp_atual < 5 and sensacao_termica < 0 and  vento_atual > 20 :
+        data_point_alarme_of = f"alarme,maquina=REN1,local={cidade} nome_alarme=\"onda_frio\" {timestamp}"
+        escrita_influx.write(bucket=INFLUX_BUCKET, org=INFLUX_ORG, record=data_point_alarme_of)
         print(f"Onda de frio detectada, temperatura:{temp_atual}, sensacao termica caiu {sensacao_termica} devido ao vento forte {vento_atual},")
         return True
     else:
         return False
 
-def alarme_tendencia_aumento_temperatura(temp_atual, temp_6h_atual, temp_12h_atual, temp_18h_atual, temp_24h_atual):
+def alarme_tendencia_aumento_temperatura(temp_atual, temp_6h_atual, temp_12h_atual, temp_18h_atual, temp_24h_atual, cidade, timestamp):
+    
     if abs(temp_atual - temp_6h_atual) > 5 or abs(temp_atual - temp_12h_atual) > 5 or abs(temp_atual - temp_18h_atual) > 5 or abs(temp_atual - temp_24h_atual) > 5 :
+        data_point_alarme_tat = f"alarme,maquina=REN1,local={cidade} nome_alarme=\"tendencia_aumento\" {timestamp}"
+        escrita_influx.write(bucket=INFLUX_BUCKET, org=INFLUX_ORG, record=data_point_alarme_tat)
         print(f"Tendencia de mudança brusca de temperatura em um periodo de 6 horas!")
         return True
     else:
@@ -321,9 +347,9 @@ def alarme_tendencia_aumento_temperatura(temp_atual, temp_6h_atual, temp_12h_atu
 
 def checar_alarmes(temperatura, pressao, umidade, vento, sensacao, clima):
     #print("checando alarmes")
-    alarme_tempestade_severa(pressao.pressao_atual, vento.vento_atual, umidade.umidade_atual)
-    alarme_sensacao_termica_extrema(sensacao.sensacao_termica, temperatura.temp_atual, vento.vento_atual, umidade.umidade_atual)
-    alarme_onda_calor(sensacao.sensacao_termica, temperatura.temp_atual, umidade.umidade_atual)
-    alarme_onda_frio(sensacao.sensacao_termica, temperatura.temp_atual, vento.vento_atual)
-    alarme_tendencia_aumento_temperatura(temperatura.temp_atual, temperatura.temp_6h_atual, temperatura.temp_12h_atual, temperatura.temp_18h_atual, temperatura.temp_24h_atual)
+    alarme_tempestade_severa(pressao.pressao_atual, vento.vento_atual, umidade.umidade_atual, pressao.cidade, pressao.timestamp)
+    alarme_sensacao_termica_extrema(sensacao.sensacao_termica, temperatura.temp_atual, vento.vento_atual, umidade.umidade_atual, pressao.cidade, sensacao.timestamp)
+    alarme_onda_calor(sensacao.sensacao_termica, temperatura.temp_atual, umidade.umidade_atual, pressao.cidade, sensacao.timestamp)
+    alarme_onda_frio(sensacao.sensacao_termica, temperatura.temp_atual, vento.vento_atual, pressao.cidade, sensacao.timestamp)
+    alarme_tendencia_aumento_temperatura(temperatura.temp_atual, temperatura.temp_6h_atual, temperatura.temp_12h_atual, temperatura.temp_18h_atual, temperatura.temp_24h_atual, pressao.cidade, temperatura.timestamp)
     
