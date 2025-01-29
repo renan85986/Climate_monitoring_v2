@@ -3,13 +3,13 @@
 O projeto de monitoramento climático de cidades realiza o monitoramento em tempo real de dados climáticos de qualquer cidade no mundo. Inclui dados de temperatura, umidade, velocidade do vento, pressão, umidade e sensação térmica. 
 A combinação dessas métricas geram alarmes importantes para condições adversas ou extremas detectadas no local desejado.
 
-## Comunicação
+## 📡Comunicação
 O projeto segue um fluxo simples, que utiliza o protocolo MQTT para comunicação entre seus elementos e a linguagem Python no desenvolvimento
 O broker MQTT utilizado foi o Mosquitto, a ferramente de banco de dados temporal foi o InfluxDB e a ferramenta de visualização de dados foi o Grafana 
 
-## Sobre o código
+## 💻Sobre o código
 Além de uma estrutura de código auxiliar para criação do cliente MQTT, os códigos responsáveis pela coleta e processamento dos dados são:
-## _data_collector.py_
+## 📥 _data_collector.py_
 Se comunica com a weather API(https://www.weatherapi.com/), fazendo requisições de dados a cada 10 segundos, o payload vindo da API contém dados de temperatura, umidade, pressão, vento e sensação térmica do dia atual e da previsão do dia seguinte da cidade 
 
 ![image](https://github.com/user-attachments/assets/a4ee6597-aa90-4d48-92f0-5385f7510c2f)
@@ -22,7 +22,7 @@ Depois de recebidos e organizados os dados, o _data_collector_ se inscreve no t�
 
 ![image](https://github.com/user-attachments/assets/867ec760-cc5f-4c7a-b34a-0ccffcf26d2f)
 
-## _data_processor.py_
+## 🖥️ _data_processor.py_
 O data processor se inscreve nos tópicos dos sensores publicados pelo data collector, e recebe os dados via MQTT. Após receber os dados, extrai eles do payload e alimenta as classes relacionadas a cada medição, que contém todos os dados relacionados a cada sensor
 
 ![image](https://github.com/user-attachments/assets/5c2d2e5a-01a0-488c-8f4c-1fb384d12d6d)
@@ -48,7 +48,7 @@ Depois de ler os dados e processar em alarmes, o processor persiste os dados em 
 
 ![image](https://github.com/user-attachments/assets/8f281ef4-42ad-4329-8233-7110299c56e1)
 
-## Visualização de dados 
+## 📊Visualização de dados 
 Com uma ótima integração nativa do InfluxDB com o Grafana, a interface faz consultas ao banco de dados e permite a visualização dos dados além dos alarmes disparados da última cidade registrada
 
 ![image](https://github.com/user-attachments/assets/d170bfac-5f76-433e-92e9-0277e3d4c108)  ![image](https://github.com/user-attachments/assets/8f0ebd3c-cdc7-4d60-ae8a-02f5ed29e939)
